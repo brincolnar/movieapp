@@ -5,6 +5,8 @@ const filterInput = document.querySelector("#filter-input");
 const searchForm = document.querySelector("#search-form");
 const searchInput = document.querySelector("#search-form input");
 const libraryGrid = document.querySelector("#library-grid");
+const filterInputLibrary = document.querySelector("#filter-input-library");
+const libraryLengthSpan = document.querySelector("#library-length");
 
 let results;
 
@@ -33,7 +35,7 @@ window.addEventListener("load", (event) => {
         card.innerHTML = `<img width="100%" height="400" src="https://image.tmdb.org/t/p/original${results[i].poster_path}" alt="">
             <h2 class="m-4">${results[i].title}</h2>
             <a id="add-library-icon" class="p-3" href=""><i alt="Add to Library" class="text-3xl fa fa-plus hover:text-indigo-200"></i></a>
-            <a id="see-details-icon" class="p-3" href="#"><i alt="See Details" class="text-3xl fa fa-eye hover:text-indigo-200"></i></a>`;
+            <a id="see-details-icon" class="p-3" href="https://www.themoviedb.org/movie/${results[i].id}"><i alt="See Details" class="text-3xl fa fa-eye hover:text-indigo-200"></i></a>`;
             
         movieGrid.appendChild(card);
       }
@@ -52,9 +54,12 @@ window.addEventListener("load", (event) => {
       card.innerHTML = `<img width="100%" height="400" src="https://image.tmdb.org/t/p/original${libraryMovies[i].poster_path}" alt="">
           <h2 class="m-4">${libraryMovies[i].title}</h2>
           <a id="remove-icon" class="p-3" href=""><i alt="Remove from Library" class="text-3xl fa fa-trash hover:text-indigo-200"></i></a>
-          <a id="see-details-icon" class="p-3" href="#"><i alt="See Details" class="text-3xl fa fa-eye hover:text-indigo-200"></i></a>`;
-          
-      libraryGrid.appendChild(card);
+          <a id="see-details-icon" class="p-3" href="https://www.themoviedb.org/movie/${libraryMovies[i].id}"><i alt="See Details" class="text-3xl fa fa-eye hover:text-indigo-200"></i></a>`;
+      
+      if(libraryGrid) {
+        libraryGrid.appendChild(card);
+      }
+      
     }
 
     const removeFromLibraryButtons = document.querySelectorAll('#remove-icon');
@@ -84,14 +89,45 @@ window.addEventListener("load", (event) => {
       
     }
 
+    if(libraryLengthSpan) {
+      const library = JSON.parse(sessionStorage.getItem('library'));
+      libraryLengthSpan.textContent = `${library.length}`
+    }
+
 });
+console.log(filterInputLibrary)
+
+if(filterInputLibrary) {
+  filterInputLibrary.addEventListener('keyup', filterMoviesLibrary);
+} else {
+  filterInput.addEventListener('keyup', filterMovies);
+}
 
 
-filterInput.addEventListener('keyup', filterMovies);
+
+// filtering movies using DOM
+function filterMoviesLibrary(e) {
+
+  console.log('Event triggered!')
+
+  const titles = document.querySelectorAll("#library-grid h2");
+  
+  for (let index = 0; index < titles.length; index++) {
+
+    // check if title contains filter
+    if(titles[index].textContent.indexOf(e.target.value) == -1) {
+      console.log('Filter: ' + e.target.value);
+      titles[index].parentElement.style.display = 'none';
+    } else {
+      titles[index].parentElement.style.display = 'block';
+    }
+    
+  }
+}
 
 // filtering movies using DOM
 function filterMovies(e) {
-  
+
   const titles = document.querySelectorAll("#movie-grid h2");
   
   for (let index = 0; index < titles.length; index++) {
@@ -144,7 +180,7 @@ function searchMovies(e) {
         card.innerHTML = `<img width="100%" height="400" src="https://image.tmdb.org/t/p/original${data.results[index].poster_path}" alt="">
             <h2 class="m-4">${data.results[index].title}</h2>
             <a id="add-library-icon" class="p-3" href=""><i alt="Add to Library" class="text-3xl fa fa-plus hover:text-indigo-200"></i></a>
-            <a id="see-details-icon" class="p-3" href="#"><i alt="See Details" class="text-3xl fa fa-eye hover:text-indigo-200"></i></a>`;
+            <a id="see-details-icon" class="p-3" href="https://www.themoviedb.org/movie/${data.results[index].id}"><i alt="See Details" class="text-3xl fa fa-eye hover:text-indigo-200"></i></a>`;
     
         movieGrid.appendChild(card);
       }
@@ -198,7 +234,22 @@ function addToLibrary(e) {
 
       // get and change session storage library
       let library = JSON.parse(sessionStorage.getItem('library'));
-      library.push(res);
+
+      let alreadyIncluded = false;
+
+      // check library for duplicates
+      for (let index = 0; index < library.length; index++) {
+        if(library[index].id == res.id) {
+          alreadyIncluded = true;
+          console.log('already included')
+          alert('Already added to library.')
+        }
+        
+      }
+
+      if(!alreadyIncluded) {
+        library.push(res);
+      }
 
       // save new library array to session storage
       sessionStorage.setItem('library', JSON.stringify(library));
